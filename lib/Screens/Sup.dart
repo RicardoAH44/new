@@ -22,6 +22,12 @@ class _SupPageState extends State<SupPage> {
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   LatLng _nearestHospital = LatLng(0.0, 0.0);
+  TextEditingController _searchController = TextEditingController();
+  bool _showHospitalInfo = false;
+  String _selectedHospitalName = '';
+  String _selectedHospitalAddress = '';
+  String _selectedHospitalPhone = '';
+  String _selectedHospitalHours = '';
 
   @override
   void initState() {
@@ -63,13 +69,19 @@ class _SupPageState extends State<SupPage> {
     }
   }
 
-  Future<void> _searchNearbyHospitals() async {
+  Future<void> _searchNearbyHospitals({String? keyword}) async {
     final apiKey = 'AIzaSyDnVASaBzWWIx0ZaO5E5legQLNGrqMIztk';
     final radius = 2500;
     final type = 'hospital';
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    String url;
+    if (keyword != null && keyword.isNotEmpty) {
+      url =
+          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$keyword&location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    } else {
+      url =
+          'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    }
 
     final response = await http.get(Uri.parse(url));
 
@@ -99,6 +111,9 @@ class _SupPageState extends State<SupPage> {
             infoWindow: InfoWindow(
               title: name,
             ),
+            onTap: () {
+              _showhospitalInfo(name);
+            },
           ),
         );
       });
@@ -167,16 +182,59 @@ class _SupPageState extends State<SupPage> {
     }
   }
 
+  void _showhospitalInfo(String hospitalName) {
+    // Implementa la lógica para mostrar la información del hospital según su nombre
+    // Puedes obtener la información adicional del hospital aquí y luego mostrarla en la tarjeta
+    _selectedHospitalName = hospitalName;
+    _selectedHospitalAddress = 'Dirección del hospital';
+    _selectedHospitalPhone = 'Teléfono del hospital';
+    _selectedHospitalHours = 'Horario del hospital';
+    _showHospitalInfo = true;
+    setState(() {});
+  }
+
+  void _hideHospitalInfo() {
+    // Implementa la lógica para ocultar la información del hospital
+    _showHospitalInfo = false;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Mapa con Ubicación Actual y Hospital Más Cercano'),
+          title: const Text('Mapa con Ubicación Actual y Hospitales Cercanos'),
           backgroundColor: Colors.green[700],
+          actions: [
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                _searchNearbyHospitals(keyword: _searchController.text);
+              },
+            ),
+          ],
         ),
         body: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Buscar hospitales',
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                    },
+                  ),
+                ),
+                onSubmitted: (value) {
+                  _searchNearbyHospitals(keyword: value);
+                },
+              ),
+            ),
             Expanded(
               child: GoogleMap(
                 onMapCreated: _onMapCreated,
@@ -188,9 +246,44 @@ class _SupPageState extends State<SupPage> {
                 polylines: _polylines,
               ),
             ),
+            if (_showHospitalInfo)
+              _buildHospitalInfoCard()
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHospitalInfoCard() {
+    return Card(
+      margin: const EdgeInsets.all(8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$_selectedHospitalName',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8.0),
+            Text('Dirección: $_selectedHospitalAddress'),
+            SizedBox(height: 8.0),
+            Text('Teléfono: $_selectedHospitalPhone'),
+            SizedBox(height: 8.0),
+            Text('Horario: $_selectedHospitalHours'),
+            SizedBox(height: 8.0),
+            ElevatedButton(
+              onPressed: _hideHospitalInfo,
+              child: Text('Cerrar'),
+            ),
           ],
         ),
       ),
     );
   }
 }
+
