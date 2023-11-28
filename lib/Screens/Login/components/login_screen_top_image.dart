@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 
 import '../../../constants.dart';
 
@@ -13,18 +13,23 @@ class LoginScreenTopImage extends StatelessWidget {
     return Column(
       children: [
         Text(
-          "LOGIN",
+          "",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         SizedBox(height: defaultPadding * 2),
-        Row(
+       Row(
           children: [
-            const Spacer(),
+            Spacer(),
             Expanded(
               flex: 8,
-              child: SvgPicture.asset("assets/icons/login.svg"),
+              child: Image.asset(
+                "assets/images/wo.jpg", // Asegúrate de proporcionar la ruta correcta
+                // También puedes ajustar la altura y el ancho de la imagen según tus necesidades
+                height: 350,
+                width: 350,
+              ),
             ),
-            const Spacer(),
+            Spacer(),
           ],
         ),
         SizedBox(height: defaultPadding * 2),

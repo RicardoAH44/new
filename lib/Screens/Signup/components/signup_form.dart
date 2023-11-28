@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_auth/Screens/home.dart';
 
 import '../../../components/already_have_an_account_acheck.dart';
 import '../../../constants.dart';
@@ -22,14 +24,53 @@ class _SignUpFormState extends State<SignUpForm> {
     try {
       final String email = _emailController.text.trim();
       final String password = _passwordController.text.trim();
+
+      // Verifica que el correo electrónico sea válido
+      if (!isValidEmail(email)) {
+        // Muestra un mensaje de error al usuario
+        print('Correo electrónico no válido');
+        return;
+      }
+
       await _auth.createUserWithEmailAndPassword(email: email, password: password);
+
       // Si llega aquí, el registro fue exitoso
       // Puedes realizar acciones adicionales, como navegar a la página principal.
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+
     } catch (e) {
       // Maneja los errores de registro aquí
       print('Error de registro: $e');
-      // Puedes mostrar un mensaje de error al usuario si lo deseas.
+
+      // Muestra mensajes de error específicos
+      if (e is FirebaseAuthException) {
+        if (e.code == 'weak-password') {
+          print('La contraseña es débil. Elija una contraseña más fuerte.');
+          // Puedes mostrar un mensaje de error al usuario si lo deseas.
+        } else if (e.code == 'email-already-in-use') {
+          print('La dirección de correo electrónico ya está en uso.');
+          // Muestra una notificación en la aplicación
+          Fluttertoast.showToast(
+            msg: 'La dirección de correo electrónico ya está en uso.',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+          );
+        }
+        // Otros códigos de error pueden ser manejados de manera similar.
+      }
     }
+  }
+
+  bool isValidEmail(String email) {
+    // Utiliza una expresión regular para verificar la validez del correo electrónico
+    // Puedes personalizar esta expresión regular según tus requisitos.
+    final emailRegex = RegExp(r'^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$');
+    return emailRegex.hasMatch(email);
   }
 
   @override
@@ -86,7 +127,7 @@ class _SignUpFormState extends State<SignUpForm> {
                 _signUpWithEmailAndPassword();
               }
             },
-            child: Text("Sign Up".toUpperCase()),
+            child: Text("Registrarse".toUpperCase()),
           ),
           const SizedBox(height: defaultPadding),
           AlreadyHaveAnAccountCheck(

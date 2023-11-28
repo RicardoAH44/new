@@ -47,7 +47,7 @@ class LoginAndSignupBtn extends StatelessWidget {
               primary: kPrimaryLightColor, elevation: 0),
           child: Text(
             "Registrarse".toUpperCase(),
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
           ),
         ),
       ],

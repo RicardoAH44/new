@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_auth/Screens/Sup.dart';
+
+import 'package:flutter_auth/Screens/hosp.dart';
+import 'package:flutter_auth/Screens/library.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
@@ -16,6 +20,7 @@ class bankPage extends StatefulWidget {
 }
 
 class _SupPageState extends State<bankPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late GoogleMapController mapController;
   Location location = Location();
   LatLng _currentLocation = LatLng(0.0, 0.0);
@@ -65,7 +70,7 @@ class _SupPageState extends State<bankPage> {
 
   Future<void> _searchNearbyBanks() async {
     final apiKey = 'AIzaSyDnVASaBzWWIx0ZaO5E5legQLNGrqMIztk';
-    final radius = 2500;
+    final radius = 10000;
     final type = 'bank';
 
     final url =
@@ -170,9 +175,16 @@ class _SupPageState extends State<bankPage> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        key: _scaffoldKey, // Agrega esta línea
         appBar: AppBar(
-          title: const Text('Mapa con Ubicación Actual y Hospital Más Cercano'),
-          backgroundColor: Colors.green[700],
+          title: const Text('Bancos'),
+          backgroundColor: const Color.fromARGB(255, 56, 139, 142),
+          leading: IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {
+              _scaffoldKey.currentState!.openDrawer();
+            },
+          ),
         ),
         body: Column(
           children: [
@@ -188,6 +200,52 @@ class _SupPageState extends State<bankPage> {
               ),
             ),
           ],
+        ),
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.green[700],
+                ),
+                child: Text('Menú'),
+              ),
+               ListTile(
+                title: Text('Supermercado'),
+                onTap: () {
+                  Navigator.pop(context); // Cierra el drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HospPage()),
+                  );
+                },
+              ),
+              ListTile(
+                title: Text('Hospitales'),
+                onTap: () {
+                  // Acciones al hacer clic en la opción 2
+                  Navigator.pop(context); // Cierra el drawer
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SupPage()),
+                  );
+                },
+              ),
+              ListTile(
+                title: Text('Libreria'),
+                onTap: () {
+                  // Acciones al hacer clic en la opción 2
+                  Navigator.pop(context); // Cierra el drawer
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LibraryPage()),
+                  );
+                },
+              ),
+              // Agrega más opciones según tus necesidades
+            ],
+          ),
         ),
       ),
     );

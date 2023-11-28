@@ -29,7 +29,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Widgets Section'),
+        title: Text(''),
         centerTitle: true,
       ),
       body: Padding(
