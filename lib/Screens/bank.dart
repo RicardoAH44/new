@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_auth/Screens/Sup.dart';
-
-import 'package:flutter_auth/Screens/hosp.dart';
-import 'package:flutter_auth/Screens/library.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'dart:math' show atan2, cos, pi, pow, sin, sqrt;
+import 'package:flutter_auth/Screens/Sup.dart';
+import 'package:flutter_auth/Screens/hosp.dart';
+import 'package:flutter_auth/Screens/library.dart';
 
 void main() => runApp(const bankPage());
 
@@ -104,6 +103,9 @@ class _SupPageState extends State<bankPage> {
             infoWindow: InfoWindow(
               title: name,
             ),
+            onTap: () {
+              _showBankRouteFromMenu(bankLocation);
+            },
           ),
         );
       });
@@ -155,7 +157,8 @@ class _SupPageState extends State<bankPage> {
         for (PointLatLng point in points) {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
- final String polylineId = 'polyline_id_${destination.latitude}${destination.longitude}';
+
+        final String polylineId = 'polyline_id_${destination.latitude}${destination.longitude}';
         final Polyline polyline = Polyline(
           polylineId: PolylineId(polylineId),
           color: Colors.blue,
@@ -171,11 +174,38 @@ class _SupPageState extends State<bankPage> {
     }
   }
 
+  Future<void> _showBankRouteFromMenu(LatLng destination) async {
+    try {
+      await _getDirections(destination);
+      mapController.animateCamera(
+        CameraUpdate.newLatLngBounds(_boundsFromLatLngList([_currentLocation, destination]), 100),
+      );
+    } catch (e) {
+      print("Error al mostrar la ruta en el mapa: $e");
+    }
+  }
+
+  LatLngBounds _boundsFromLatLngList(List<LatLng> list) {
+    double minLat = list[0].latitude;
+    double maxLat = list[0].latitude;
+    double minLng = list[0].longitude;
+    double maxLng = list[0].longitude;
+
+    for (LatLng latLng in list) {
+      if (latLng.latitude < minLat) minLat = latLng.latitude;
+      if (latLng.latitude > maxLat) maxLat = latLng.latitude;
+      if (latLng.longitude < minLng) minLng = latLng.longitude;
+      if (latLng.longitude > maxLng) maxLng = latLng.longitude;
+    }
+
+    return LatLngBounds(northeast: LatLng(maxLat, maxLng), southwest: LatLng(minLat, minLng));
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        key: _scaffoldKey, // Agrega esta línea
+        key: _scaffoldKey,
         appBar: AppBar(
           title: const Text('Bancos'),
           backgroundColor: const Color.fromARGB(255, 56, 139, 142),
@@ -211,10 +241,10 @@ class _SupPageState extends State<bankPage> {
                 ),
                 child: Text('Menú'),
               ),
-               ListTile(
+              ListTile(
                 title: Text('Supermercado'),
                 onTap: () {
-                  Navigator.pop(context); // Cierra el drawer
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => HospPage()),
@@ -224,9 +254,8 @@ class _SupPageState extends State<bankPage> {
               ListTile(
                 title: Text('Hospitales'),
                 onTap: () {
-                  // Acciones al hacer clic en la opción 2
-                  Navigator.pop(context); // Cierra el drawer
-                   Navigator.push(
+                  Navigator.pop(context);
+                  Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => SupPage()),
                   );
@@ -235,15 +264,13 @@ class _SupPageState extends State<bankPage> {
               ListTile(
                 title: Text('Libreria'),
                 onTap: () {
-                  // Acciones al hacer clic en la opción 2
-                  Navigator.pop(context); // Cierra el drawer
-                   Navigator.push(
+                  Navigator.pop(context);
+                  Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => LibraryPage()),
                   );
                 },
               ),
-              // Agrega más opciones según tus necesidades
             ],
           ),
         ),
@@ -251,3 +278,4 @@ class _SupPageState extends State<bankPage> {
     );
   }
 }
+

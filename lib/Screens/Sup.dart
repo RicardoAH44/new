@@ -28,6 +28,7 @@ class _SupPageState extends State<SupPage> {
   String _selectedHospitalAddress = '';
   String _selectedHospitalPhone = '';
   String _selectedHospitalHours = '';
+  List<dynamic> _allHospitals = [];
 
   @override
   void initState() {
@@ -113,9 +114,12 @@ class _SupPageState extends State<SupPage> {
             ),
             onTap: () {
               _showhospitalInfo(name);
+              _showRouteOnMap(hospitalLocation);
             },
           ),
         );
+
+        _allHospitals.add(hospital);
       });
 
       _getDirections(_nearestHospital);
@@ -182,19 +186,48 @@ class _SupPageState extends State<SupPage> {
     }
   }
 
+  Future<void> _showRouteOnMap(LatLng destination) async {
+    try {
+      await _getDirections(destination);
+      mapController.animateCamera(
+        CameraUpdate.newLatLngBounds(_boundsFromLatLngList([_currentLocation, destination]), 100),
+      );
+    } catch (e) {
+      print("Error al mostrar la ruta en el mapa: $e");
+    }
+  }
+
+  LatLngBounds _boundsFromLatLngList(List<LatLng> list) {
+    double minLat = list[0].latitude;
+    double maxLat = list[0].latitude;
+    double minLng = list[0].longitude;
+    double maxLng = list[0].longitude;
+
+    for (LatLng latLng in list) {
+      if (latLng.latitude < minLat) minLat = latLng.latitude;
+      if (latLng.latitude > maxLat) maxLat = latLng.latitude;
+      if (latLng.longitude < minLng) minLng = latLng.longitude;
+      if (latLng.longitude > maxLng) maxLng = latLng.longitude;
+    }
+
+    return LatLngBounds(northeast: LatLng(maxLat, maxLng), southwest: LatLng(minLat, minLng));
+  }
+
   void _showhospitalInfo(String hospitalName) {
-    // Implementa la lógica para mostrar la información del hospital según su nombre
-    // Puedes obtener la información adicional del hospital aquí y luego mostrarla en la tarjeta
-    _selectedHospitalName = hospitalName;
-    _selectedHospitalAddress = 'Dirección del hospital';
-    _selectedHospitalPhone = 'Teléfono del hospital';
-    _selectedHospitalHours = 'Horario del hospital';
+    final selectedHospital = _allHospitals.firstWhere((hospital) => hospital['name'] == hospitalName);
+    _selectedHospitalName = selectedHospital['name'];
+    _selectedHospitalAddress = selectedHospital['formatted_address'] ?? 'Dirección no disponible';
+    _selectedHospitalPhone = selectedHospital['formatted_phone_number'] ?? 'Teléfono no disponible';
+    _selectedHospitalHours = selectedHospital['opening_hours'] != null &&
+            selectedHospital['opening_hours']['weekday_text'] != null
+        ? selectedHospital['opening_hours']['weekday_text'][0]
+        : 'Horario no disponible';
+
     _showHospitalInfo = true;
     setState(() {});
   }
 
   void _hideHospitalInfo() {
-    // Implementa la lógica para ocultar la información del hospital
     _showHospitalInfo = false;
     setState(() {});
   }
@@ -246,11 +279,26 @@ class _SupPageState extends State<SupPage> {
                 polylines: _polylines,
               ),
             ),
+            ElevatedButton(
+              onPressed: () {
+                _showHospitalList();
+              },
+              child: Text('Mostrar Hospitales'),
+            ),
             if (_showHospitalInfo)
               _buildHospitalInfoCard()
           ],
         ),
       ),
+    );
+  }
+
+  void _showHospitalList() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return _buildHospitalList();
+      },
     );
   }
 
@@ -285,4 +333,28 @@ class _SupPageState extends State<SupPage> {
       ),
     );
   }
+
+  Widget _buildHospitalList() {
+    return ListView.builder(
+      itemCount: _allHospitals.length,
+      itemBuilder: (context, index) {
+        final hospital = _allHospitals[index];
+        return ListTile(
+          title: Text(hospital['name']),
+          subtitle: Text(hospital['formatted_address'] ?? 'Dirección no disponible'),
+          onTap: () {
+            Navigator.pop(context); // Cerrar el modal
+            _showhospitalInfo(hospital['name']);
+            _showRouteOnMap(LatLng(
+              hospital['geometry']['location']['lat'],
+              hospital['geometry']['location']['lng'],
+            ));
+          },
+        );
+      },
+    );
+  }
 }
+
+
+
