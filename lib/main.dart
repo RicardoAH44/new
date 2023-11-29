@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
         'home': ( _ ) => HomeScreen(),
         'Sup': ( _ ) => SupPage(),
         'hosp': ( _ ) => HospPage(),
-        'bank': ( _ ) => bankPage(),
+        'bank': ( _ ) => BankPage(),
         'Library': ( _ ) => LibraryPage(),
       },
       theme: ThemeData(

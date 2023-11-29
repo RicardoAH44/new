@@ -239,7 +239,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   Navigator.pop(context); // Cierra el drawer
                    Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => bankPage()),
+                    MaterialPageRoute(builder: (context) => BankPage()),
                   );
                 },
               ),

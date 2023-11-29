@@ -5,20 +5,17 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'dart:math' show atan2, cos, pi, pow, sin, sqrt;
-import 'package:flutter_auth/Screens/Sup.dart';
-import 'package:flutter_auth/Screens/hosp.dart';
-import 'package:flutter_auth/Screens/library.dart';
 
-void main() => runApp(const bankPage());
+void main() => runApp(const BankPage());
 
-class bankPage extends StatefulWidget {
-  const bankPage({Key? key}) : super(key: key);
+class BankPage extends StatefulWidget {
+  const BankPage({Key? key}) : super(key: key);
 
   @override
-  _SupPageState createState() => _SupPageState();
+  _BankPageState createState() => _BankPageState();
 }
 
-class _SupPageState extends State<bankPage> {
+class _BankPageState extends State<BankPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late GoogleMapController mapController;
   Location location = Location();
@@ -26,6 +23,11 @@ class _SupPageState extends State<bankPage> {
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   LatLng _nearestBank = LatLng(0.0, 0.0);
+  TextEditingController _searchController = TextEditingController();
+  bool _showBankInfo = false;
+  String _selectedBankName = '';
+  String _selectedBankAddress = '';
+  String _selectedBankHours = '';
 
   @override
   void initState() {
@@ -67,13 +69,19 @@ class _SupPageState extends State<bankPage> {
     }
   }
 
-  Future<void> _searchNearbyBanks() async {
+  Future<void> _searchNearbyBanks({String? keyword}) async {
     final apiKey = 'AIzaSyDnVASaBzWWIx0ZaO5E5legQLNGrqMIztk';
     final radius = 10000;
     final type = 'bank';
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    String url;
+    if (keyword != null && keyword.isNotEmpty) {
+      url =
+          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$keyword&location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    } else {
+      url =
+          'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    }
 
     final response = await http.get(Uri.parse(url));
 
@@ -104,7 +112,8 @@ class _SupPageState extends State<bankPage> {
               title: name,
             ),
             onTap: () {
-              _showBankRouteFromMenu(bankLocation);
+              _showbankInfo(name);
+              _showRouteOnMap(bankLocation);
             },
           ),
         );
@@ -174,7 +183,7 @@ class _SupPageState extends State<bankPage> {
     }
   }
 
-  Future<void> _showBankRouteFromMenu(LatLng destination) async {
+  Future<void> _showRouteOnMap(LatLng destination) async {
     try {
       await _getDirections(destination);
       mapController.animateCamera(
@@ -201,6 +210,18 @@ class _SupPageState extends State<bankPage> {
     return LatLngBounds(northeast: LatLng(maxLat, maxLng), southwest: LatLng(minLat, minLng));
   }
 
+  void _showbankInfo(String bankName) {
+    // Implementa la lógica para mostrar la información del banco
+    // ignore: unused_local_variable
+    final selectedBank = _markers.firstWhere((marker) => marker.markerId.value == bankName);
+    _selectedBankName = bankName;
+    _selectedBankAddress = 'Dirección del banco';
+    _selectedBankHours = 'Horario del banco';
+
+    _showBankInfo = true;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -215,9 +236,35 @@ class _SupPageState extends State<bankPage> {
               _scaffoldKey.currentState!.openDrawer();
             },
           ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                _searchNearbyBanks(keyword: _searchController.text);
+              },
+            ),
+          ],
         ),
         body: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Buscar bancos',
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                    },
+                  ),
+                ),
+                onSubmitted: (value) {
+                  _searchNearbyBanks(keyword: value);
+                },
+              ),
+            ),
             Expanded(
               child: GoogleMap(
                 onMapCreated: _onMapCreated,
@@ -229,6 +276,14 @@ class _SupPageState extends State<bankPage> {
                 polylines: _polylines,
               ),
             ),
+            ElevatedButton(
+              onPressed: () {
+                _showBankList();
+              },
+              child: Text('Mostrar Bancos'),
+            ),
+            if (_showBankInfo)
+              _buildBankInfoCard()
           ],
         ),
         drawer: Drawer(
@@ -245,30 +300,21 @@ class _SupPageState extends State<bankPage> {
                 title: Text('Supermercado'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => HospPage()),
-                  );
+                  // Implementa la lógica para navegar a la página de supermercados
                 },
               ),
               ListTile(
                 title: Text('Hospitales'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SupPage()),
-                  );
+                  // Implementa la lógica para navegar a la página de hospitales
                 },
               ),
               ListTile(
                 title: Text('Libreria'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LibraryPage()),
-                  );
+                  // Implementa la lógica para navegar a la página de librerías
                 },
               ),
             ],
@@ -277,5 +323,68 @@ class _SupPageState extends State<bankPage> {
       ),
     );
   }
-}
 
+  void _showBankList() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return _buildBankList();
+      },
+    );
+  }
+
+  Widget _buildBankInfoCard() {
+    return Card(
+      margin: const EdgeInsets.all(8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$_selectedBankName',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8.0),
+            Text('Dirección: $_selectedBankAddress'),
+            SizedBox(height: 8.0),
+            Text('Horario: $_selectedBankHours'),
+            SizedBox(height: 8.0),
+            ElevatedButton(
+              onPressed: () {
+                _hideBankInfo();
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBankList() {
+    // Implementa la lógica para construir la lista de bancos
+    return ListView.builder(
+      itemCount: _markers.length,
+      itemBuilder: (context, index) {
+        final bank = _markers.elementAt(index);
+        return ListTile(
+          title: Text(bank.markerId.value),
+          onTap: () {
+            Navigator.pop(context); // Cerrar el modal
+            _showbankInfo(bank.markerId.value);
+            _showRouteOnMap(bank.position);
+          },
+        );
+      },
+    );
+  }
+
+  void _hideBankInfo() {
+    _showBankInfo = false;
+    setState(() {});
+  }
+}

@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_auth/Screens/Sup.dart';
-import 'package:flutter_auth/Screens/bank.dart';
-import 'package:flutter_auth/Screens/library.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
@@ -15,17 +12,22 @@ class HospPage extends StatefulWidget {
   const HospPage({Key? key}) : super(key: key);
 
   @override
-  _SupermarketPageState createState() => _SupermarketPageState();
+  _HospPageState createState() => _HospPageState();
 }
 
-class _SupermarketPageState extends State<HospPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+class _HospPageState extends State<HospPage> {
   late GoogleMapController mapController;
   Location location = Location();
   LatLng _currentLocation = LatLng(0.0, 0.0);
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   LatLng _nearestSupermarket = LatLng(0.0, 0.0);
+  TextEditingController _searchController = TextEditingController();
+  bool _showSupermarketInfo = false;
+  String _selectedSupermarketName = '';
+  String _selectedSupermarketAddress = '';
+  String _selectedSupermarketPhone = '';
+  List<dynamic> _allSupermarkets = [];
 
   @override
   void initState() {
@@ -67,13 +69,19 @@ class _SupermarketPageState extends State<HospPage> {
     }
   }
 
-  Future<void> _searchNearbySupermarkets() async {
+  Future<void> _searchNearbySupermarkets({String? keyword}) async {
     final apiKey = 'AIzaSyDnVASaBzWWIx0ZaO5E5legQLNGrqMIztk';
     final radius = 2500;
     final type = 'supermarket';
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    String url;
+    if (keyword != null && keyword.isNotEmpty) {
+      url =
+          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$keyword&location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    } else {
+      url =
+          'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentLocation.latitude},${_currentLocation.longitude}&radius=$radius&type=$type&key=$apiKey';
+    }
 
     final response = await http.get(Uri.parse(url));
 
@@ -103,8 +111,14 @@ class _SupermarketPageState extends State<HospPage> {
             infoWindow: InfoWindow(
               title: name,
             ),
+            onTap: () {
+              _showsupermarketInfo(name);
+              _showRouteOnMap(supermarketLocation);
+            },
           ),
         );
+
+        _allSupermarkets.add(supermarket);
       });
 
       _getDirections(_nearestSupermarket);
@@ -115,7 +129,7 @@ class _SupermarketPageState extends State<HospPage> {
   }
 
   double _calculateDistance(LatLng from, LatLng to) {
-    const double earthRadius = 6371.0; // Radio de la Tierra en kilómetros
+    const double earthRadius = 6371.0;
     final double lat1 = from.latitude * (pi / 180);
     final double lon1 = from.longitude * (pi / 180);
     final double lat2 = to.latitude * (pi / 180);
@@ -127,7 +141,7 @@ class _SupermarketPageState extends State<HospPage> {
     final double a = pow(sin(dlat / 2), 2) + cos(lat1) * cos(lat2) * pow(sin(dlon / 2), 2);
     final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-    return earthRadius * c; // Distancia en kilómetros
+    return earthRadius * c;
   }
 
   Future<void> _getDirections(LatLng destination) async {
@@ -171,23 +185,84 @@ class _SupermarketPageState extends State<HospPage> {
     }
   }
 
+  Future<void> _showRouteOnMap(LatLng destination) async {
+    try {
+      await _getDirections(destination);
+      mapController.animateCamera(
+        CameraUpdate.newLatLngBounds(_boundsFromLatLngList([_currentLocation, destination]), 100),
+      );
+    } catch (e) {
+      print("Error al mostrar la ruta en el mapa: $e");
+    }
+  }
+
+  LatLngBounds _boundsFromLatLngList(List<LatLng> list) {
+    double minLat = list[0].latitude;
+    double maxLat = list[0].latitude;
+    double minLng = list[0].longitude;
+    double maxLng = list[0].longitude;
+
+    for (LatLng latLng in list) {
+      if (latLng.latitude < minLat) minLat = latLng.latitude;
+      if (latLng.latitude > maxLat) maxLat = latLng.latitude;
+      if (latLng.longitude < minLng) minLng = latLng.longitude;
+      if (latLng.longitude > maxLng) maxLng = latLng.longitude;
+    }
+
+    return LatLngBounds(northeast: LatLng(maxLat, maxLng), southwest: LatLng(minLat, minLng));
+  }
+
+  void _showsupermarketInfo(String supermarketName) {
+    final selectedSupermarket = _allSupermarkets.firstWhere((supermarket) => supermarket['name'] == supermarketName);
+    _selectedSupermarketName = selectedSupermarket['name'];
+    _selectedSupermarketAddress = selectedSupermarket['formatted_address'] ?? 'Dirección no disponible';
+    _selectedSupermarketPhone = selectedSupermarket['formatted_phone_number'] ?? 'Teléfono no disponible';
+
+    _showSupermarketInfo = true;
+    setState(() {});
+  }
+
+  void _hideSupermarketInfo() {
+    _showSupermarketInfo = false;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        key: _scaffoldKey, // Agrega esta línea
         appBar: AppBar(
-          title: const Text('Supermercado'),
-          backgroundColor: const Color.fromARGB(255, 56, 139, 142),
-          leading: IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {
-              _scaffoldKey.currentState!.openDrawer();
-            },
-          ),
+          title: const Text('Mapa con Ubicación Actual y Supermercados Cercanos'),
+          backgroundColor: Colors.green[700],
+          actions: [
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                _searchNearbySupermarkets(keyword: _searchController.text);
+              },
+            ),
+          ],
         ),
         body: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Buscar supermercados',
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                    },
+                  ),
+                ),
+                onSubmitted: (value) {
+                  _searchNearbySupermarkets(keyword: value);
+                },
+              ),
+            ),
             Expanded(
               child: GoogleMap(
                 onMapCreated: _onMapCreated,
@@ -199,55 +274,77 @@ class _SupermarketPageState extends State<HospPage> {
                 polylines: _polylines,
               ),
             ),
+            ElevatedButton(
+              onPressed: () {
+                _showSupermarketList();
+              },
+              child: Text('Mostrar Supermercados'),
+            ),
+            if (_showSupermarketInfo)
+              _buildSupermarketInfoCard()
           ],
         ),
-        drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.green[700],
-                ),
-                child: Text('Menú'),
+      ),
+    );
+  }
+
+  void _showSupermarketList() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return _buildSupermarketList();
+      },
+    );
+  }
+
+  Widget _buildSupermarketInfoCard() {
+    return Card(
+      margin: const EdgeInsets.all(8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$_selectedSupermarketName',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
-               ListTile(
-                title: Text('Hospitales'),
-                onTap: () {
-                  Navigator.pop(context); // Cierra el drawer
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SupPage()),
-                  );
-                },
-              ),
-              ListTile(
-                title: Text('Bancos'),
-                onTap: () {
-                  // Acciones al hacer clic en la opción 2
-                  Navigator.pop(context); // Cierra el drawer
-                   Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => bankPage()),
-                  );
-                },
-              ),
-                ListTile(
-                title: Text('Libreria'),
-                onTap: () {
-                  // Acciones al hacer clic en la opción 2
-                  Navigator.pop(context); // Cierra el drawer
-                   Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LibraryPage()),
-                  );
-                },
-              ),
-              // Agrega más opciones según tus necesidades
-            ],
-          ),
+            ),
+            SizedBox(height: 8.0),
+            Text('Dirección: $_selectedSupermarketAddress'),
+            SizedBox(height: 8.0),
+            Text('Teléfono: $_selectedSupermarketPhone'),
+            SizedBox(height: 8.0),
+            ElevatedButton(
+              onPressed: _hideSupermarketInfo,
+              child: Text('Cerrar'),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSupermarketList() {
+    return ListView.builder(
+      itemCount: _allSupermarkets.length,
+      itemBuilder: (context, index) {
+        final supermarket = _allSupermarkets[index];
+        return ListTile(
+          title: Text(supermarket['name']),
+          subtitle: Text(supermarket['formatted_address'] ?? 'Dirección no disponible'),
+          onTap: () {
+            Navigator.pop(context);
+            _showsupermarketInfo(supermarket['name']);
+            _showRouteOnMap(LatLng(
+              supermarket['geometry']['location']['lat'],
+              supermarket['geometry']['location']['lng'],
+            ));
+          },
+        );
+      },
     );
   }
 }
