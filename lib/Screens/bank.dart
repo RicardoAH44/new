@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_auth/Screens/Sup.dart';
+import 'package:flutter_auth/Screens/hosp.dart';
+import 'package:flutter_auth/Screens/library.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
@@ -229,7 +232,7 @@ class _BankPageState extends State<BankPage> {
         key: _scaffoldKey,
         appBar: AppBar(
           title: const Text('Bancos'),
-          backgroundColor: const Color.fromARGB(255, 56, 139, 142),
+          backgroundColor: const Color.fromARGB(255, 56, 79, 142),
           leading: IconButton(
             icon: Icon(Icons.menu),
             onPressed: () {
@@ -300,21 +303,30 @@ class _BankPageState extends State<BankPage> {
                 title: Text('Supermercado'),
                 onTap: () {
                   Navigator.pop(context);
-                  // Implementa la lógica para navegar a la página de supermercados
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HospPage()),
+                  );// Implementa la lógica para navegar a la página de supermercados
                 },
               ),
               ListTile(
                 title: Text('Hospitales'),
                 onTap: () {
                   Navigator.pop(context);
-                  // Implementa la lógica para navegar a la página de hospitales
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SupPage()),
+                  );// Implementa la lógica para navegar a la página de hospitales
                 },
               ),
               ListTile(
                 title: Text('Libreria'),
                 onTap: () {
                   Navigator.pop(context);
-                  // Implementa la lógica para navegar a la página de librerías
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LibraryPage()),
+                  );// Implementa la lógica para navegar a la página de librerías
                 },
               ),
             ],

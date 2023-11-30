@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_auth/Screens/Sup.dart';
+import 'package:flutter_auth/Screens/hosp.dart';
+import 'package:flutter_auth/Screens/library.dart';
 
 class HomeScreen extends StatelessWidget {
   final List<Widget> featureWidgets = [
@@ -29,8 +32,9 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(''),
+        title: Text('¿ONTAA?'),
         centerTitle: true,
+        
       ),
       body: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -44,7 +48,51 @@ class HomeScreen extends StatelessWidget {
           },
         ),
       ),
+      drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 56, 79, 142),
+                ),
+                child: Text(''),
+              ),
+              ListTile(
+                title: Text('Supermercado'),
+                onTap: () {
+                  Navigator.pop(context);
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HospPage()),
+                  );// Implementa la lógica para navegar a la página de supermercados
+                },
+              ),
+              ListTile(
+                title: Text('Hospitales'),
+                onTap: () {
+                  Navigator.pop(context);
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SupPage()),
+                  );// Implementa la lógica para navegar a la página de hospitales
+                },
+              ),
+              ListTile(
+                title: Text('Libreria'),
+                onTap: () {
+                  Navigator.pop(context);
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LibraryPage()),
+                  );// Implementa la lógica para navegar a la página de librerías
+                },
+              ),
+            ],
+          ),
+        ),
     );
+    
   }
 }
 

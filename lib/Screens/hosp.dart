@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_auth/Screens/Sup.dart';
+import 'package:flutter_auth/Screens/bank.dart';
+import 'package:flutter_auth/Screens/library.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
@@ -232,8 +235,8 @@ class _HospPageState extends State<HospPage> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Mapa con Ubicación Actual y Supermercados Cercanos'),
-          backgroundColor: Colors.green[700],
+          title: const Text('Supermercados'),
+          backgroundColor: const Color.fromARGB(255, 56, 79, 142),
           actions: [
             IconButton(
               icon: Icon(Icons.search),
@@ -283,6 +286,49 @@ class _HospPageState extends State<HospPage> {
             if (_showSupermarketInfo)
               _buildSupermarketInfoCard()
           ],
+        ),
+         drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.green[700],
+                ),
+                child: Text('Menú'),
+              ),
+              ListTile(
+                title: Text('Hospitales'),
+                onTap: () {
+                  Navigator.pop(context);
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SupPage()),
+                  );// Agrega la navegación o acciones adicionales según tu necesidad
+                },
+              ),
+              ListTile(
+                title: Text('Libreria'),
+                onTap: () {
+                  Navigator.pop(context);
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LibraryPage()),
+                  );// Agrega la navegación o acciones adicionales según tu necesidad
+                },
+              ),
+              ListTile(
+                title: Text('Bancos'),
+                onTap: () {
+                  Navigator.pop(context);
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => BankPage()),
+                  );// Agrega la navegación o acciones adicionales según tu necesidad
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
