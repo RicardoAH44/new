@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_auth/Screens/Login/login_screen.dart';
 import 'package:flutter_auth/Screens/Sup.dart';
 import 'package:flutter_auth/Screens/hosp.dart';
 import 'package:flutter_auth/Screens/library.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_auth/Screens/home.dart';
+
 
 class HomeScreen extends StatelessWidget {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   final List<Widget> featureWidgets = [
     FeatureCard(
       title: 'Hospitales',
@@ -34,7 +41,6 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('¿ONTAA?'),
         centerTitle: true,
-        
       ),
       body: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -42,57 +48,73 @@ class HomeScreen extends StatelessWidget {
           itemCount: featureWidgets.length,
           itemBuilder: (context, index) {
             return Padding(
-              padding: EdgeInsets.only(bottom: 15), // Espacio entre tarjetas
+              padding: EdgeInsets.only(bottom: 15),
               child: featureWidgets[index],
             );
           },
         ),
       ),
       drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 56, 79, 142),
-                ),
-                child: Text(''),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 56, 79, 142),
               ),
-              ListTile(
-                title: Text('Supermercado'),
-                onTap: () {
-                  Navigator.pop(context);
-                    Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => HospPage()),
-                  );// Implementa la lógica para navegar a la página de supermercados
-                },
-              ),
-              ListTile(
-                title: Text('Hospitales'),
-                onTap: () {
-                  Navigator.pop(context);
-                    Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SupPage()),
-                  );// Implementa la lógica para navegar a la página de hospitales
-                },
-              ),
-              ListTile(
-                title: Text('Libreria'),
-                onTap: () {
-                  Navigator.pop(context);
-                    Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LibraryPage()),
-                  );// Implementa la lógica para navegar a la página de librerías
-                },
-              ),
-            ],
-          ),
+              child: Text(''),
+            ),
+            ListTile(
+              title: Text('Supermercado'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HospPage()),
+                );
+              },
+            ),
+            ListTile(
+              title: Text('Hospitales'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SupPage()),
+                );
+              },
+            ),
+            ListTile(
+              title: Text('Libreria'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LibraryPage()),
+                );
+              },
+            ),
+            // Nuevo ListTile para cerrar sesión
+            ListTile(
+              title: Text('Cerrar Sesión'),
+              onTap: () async {
+                // Cerrar sesión utilizando Firebase
+                await _auth.signOut();
+                // Navegar a la pantalla de inicio de sesión
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return LoginScreen(); // Reemplaza "LoginScreen" con el nombre de tu pantalla de inicio de sesión
+                    },
+                  ),
+                );
+              },
+            ),
+          ],
         ),
+      ),
     );
-    
   }
 }
 
